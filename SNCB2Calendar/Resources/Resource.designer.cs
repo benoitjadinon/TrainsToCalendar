@@ -131,6 +131,21 @@ namespace SNCB2Calendar
 			// aapt resource value: 0x7f040001
 			public const int events_added = 2130968577;
 			
+			// aapt resource value: 0x7f040005
+			public const int platform_abbr = 2130968581;
+			
+			// aapt resource value: 0x7f040008
+			public const int token_platform = 2130968584;
+			
+			// aapt resource value: 0x7f040006
+			public const int token_start = 2130968582;
+			
+			// aapt resource value: 0x7f040007
+			public const int token_stop = 2130968583;
+			
+			// aapt resource value: 0x7f040009
+			public const int token_walk = 2130968585;
+			
 			static String()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();

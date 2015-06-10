@@ -1,16 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">SNCB2Calendar</string>
+	<string name="app_name">NMBS2Calendar</string>
 
 	<string name="events_added">Event(s) added to the calendar</string>
 	<string name="events_add_error">Error, event(s) not added to the calendar</string>
 	<string name="description_parse_error">Cannot parse the content, is it a correct SNCB/NMBS journey format ?</string>
 	<string name="calendar_always_same">Always use the selected calendar</string>
-	<string name="platform_abbr">Pf.</string>
-
-	<string name="token_start">Departure </string>
-	<string name="token_stop">Arrival </string>
-	<string name="token_platform">Platf. </string>
-	<string name="token_walk">walk</string>
-
+	<string name="platform_abbr">Spr.</string>
 </resources>
