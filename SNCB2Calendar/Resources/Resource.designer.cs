@@ -60,6 +60,12 @@ namespace SNCB2Calendar
 		public partial class Id
 		{
 			
+			// aapt resource value: 0x7f050006
+			public const int btCancel = 2131034118;
+			
+			// aapt resource value: 0x7f050007
+			public const int btOK = 2131034119;
+			
 			// aapt resource value: 0x7f050002
 			public const int calAccountName = 2131034114;
 			
@@ -72,8 +78,11 @@ namespace SNCB2Calendar
 			// aapt resource value: 0x7f050000
 			public const int calId = 2131034112;
 			
+			// aapt resource value: 0x7f050005
+			public const int cbAlways = 2131034117;
+			
 			// aapt resource value: 0x7f050004
-			public const int calList = 2131034116;
+			public const int lvCalendars = 2131034116;
 			
 			static Id()
 			{
@@ -107,11 +116,20 @@ namespace SNCB2Calendar
 		public partial class String
 		{
 			
-			// aapt resource value: 0x7f040001
-			public const int app_name = 2130968577;
-			
 			// aapt resource value: 0x7f040000
-			public const int hello = 2130968576;
+			public const int app_name = 2130968576;
+			
+			// aapt resource value: 0x7f040004
+			public const int calendar_always_same = 2130968580;
+			
+			// aapt resource value: 0x7f040003
+			public const int description_parse_error = 2130968579;
+			
+			// aapt resource value: 0x7f040002
+			public const int events_add_error = 2130968578;
+			
+			// aapt resource value: 0x7f040001
+			public const int events_added = 2130968577;
 			
 			static String()
 			{

@@ -8,10 +8,10 @@ using Android.OS;
 using Android.Provider;
 using Android.Widget;
 
-
+//TODO: rename to Trains2Calendar
 namespace SNCB2Calendar
 {
-	[Activity (Label = "SNCB2Calendar", MainLauncher = true, Icon = "@drawable/icon")]
+	[Activity (Label = "Trains2Calendar", MainLauncher = true, Icon = "@drawable/icon")]
 
 	[IntentFilter ( new[]{ Intent.ActionInsert }, 
 		Categories = new[]{ Intent.CategoryDefault },
@@ -34,6 +34,7 @@ namespace SNCB2Calendar
         DataHost = "com.android.calendar",
         DataPath = "/events"
     )]
+    //TODO: remove more, and find a way to limit more to sncb/nmbs app
     /*
 	[IntentFilter ( new[]{ Intent.ActionView }, 
         Categories = new[]{ Intent.CategoryDefault },
@@ -45,6 +46,8 @@ namespace SNCB2Calendar
 
 	public class MainActivity : Activity
 	{
+		const string IntentExtraDescription = "description";
+
 		string[] calendarsProjection = {
 				CalendarContract.Calendars.InterfaceConsts.Id,
 				CalendarContract.Calendars.InterfaceConsts.CalendarDisplayName,
@@ -54,17 +57,69 @@ namespace SNCB2Calendar
 
 		readonly StringComparison Comp = StringComparison.InvariantCulture;
 
-		protected override void OnCreate (Bundle bundle)
+		ListView lvCalendars;
+		CheckBox cbAlways;
+		Button btOK;
+
+		string description;
+
+		int calendarID;
+
+		protected override void OnCreate (Bundle savedInstanceState)
 		{
-			base.OnCreate (bundle);
+			base.OnCreate (savedInstanceState);
 
 			SetContentView (Resource.Layout.Main);
 
-			var listView = FindViewById<ListView> (Resource.Id.calList);
+			lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
+			cbAlways = FindViewById<CheckBox> (Resource.Id.cbAlways);
 
-			string description = null;
-			if (Intent.HasExtra ("description")) {
-				description = Intent.Extras.GetString ("description");
+			btOK = FindViewById<Button> (Resource.Id.btOK);
+			btOK.Click += (sender, e) => FillCalendar();
+
+			var btCancel = FindViewById<Button> (Resource.Id.btCancel);
+			btCancel.Click += (sender, e) => Finish();
+
+			// calendars
+			//TODO calendarID = get from settings
+			var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
+			SimpleCursorAdapter adapter = 
+				new SimpleCursorAdapter (this, Resource.Layout.CalendarListItem, cursor, calendarsProjection, new int[] {
+				Resource.Id.calId, 
+				Resource.Id.calDisplayName, 
+				Resource.Id.calAccountName,
+				Resource.Id.calColor 
+			});
+			if (calendarID != -1){
+				//TODO: pre-select with calendarID
+				UpdateState();
+			}
+			lvCalendars.Adapter = adapter;
+			lvCalendars.ItemClick += (sender, e) => {
+				cursor.MoveToPosition (e.Position);
+				calendarID = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [0]));
+
+				//TODO: store calendar id in local settings
+
+				UpdateState();
+			};
+		}
+
+		void UpdateState ()
+		{
+			btOK.Enabled = calendarID > -1;
+		}
+
+		void FillCalendar ()
+		{
+			// parse
+			var events = Parse (description);
+
+			//TODO: add check if opened from drawer or from share intent
+			if (Intent.HasExtra (IntentExtraDescription)) {
+				description = Intent.Extras.GetString (IntentExtraDescription);
+			} else {
+				Finish(Resource.String.description_parse_error);
 			}
 			#if DEBUG
 			/*if (description == null) {
@@ -84,68 +139,59 @@ namespace SNCB2Calendar
 			}*/
 			#endif
 			if (description == null) {
+				Finish(Resource.String.description_parse_error);
 				return;
 			}
 
-			// parse
-			var events = Parse (description);
-
-			int calendarID = -1;//TODO: get from local settings
-
-			if (calendarID == -1) {
-				var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
-				SimpleCursorAdapter adapter = 
-					new SimpleCursorAdapter (this, Resource.Layout.CalendarListItem, cursor, calendarsProjection, new int[] {
-					Resource.Id.calId, 
-					Resource.Id.calDisplayName, 
-					Resource.Id.calAccountName,
-					Resource.Id.calColor 
-				});
-
-				listView.Adapter = adapter;
-				listView.ItemClick += (sender, e) => {
-					cursor.MoveToPosition (e.Position);
-					calendarID = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [0]));
-
-					//TODO: store calendar id in local settings
-
-					FillCalendar (calendarID, events);
-				};
-			} else {
-				FillCalendar(calendarID, events);
-			}
+			FillCalendar (events);
 		}
 
-		void FillCalendar (int calendarID, List<Event> events)
+		void FillCalendar (List<Event> events)
 		{
+			bool result = false;
 			foreach (var evt in events) {
-				AddToCalendar(evt, calendarID);
+				result |= AddToCalendar(evt, calendarID);
 			}
 
-			Toast.MakeText(this, Android.Resource.String.Ok, ToastLength.Short).Show();
+			Finish(result ? Resource.String.events_added : Resource.String.events_add_error);
+		}
+
+		void Finish (int message)
+		{
+			Finish(GetString(message));
+		}
+		void Finish (string message)
+		{
+			Toast.MakeText(this, message, ToastLength.Long).Show();
 
 			Finish();
 		}
 
-		Android.Net.Uri AddToCalendar (Event evt, int calendarID)
+		bool AddToCalendar (Event evt)
 		{
 			if (calendarID == -1)
-				return null;
+				return false;
 
-			ContentValues eventValues = new ContentValues ();
+			try {
+				ContentValues eventValues = new ContentValues ();
+				
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.CalendarId, calendarID);
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.Title, evt.Title);
+				//eventValues.Put (CalendarContract.Events.InterfaceConsts.Description, evt.ToString());
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtstart, GetDateTimeMS (evt.Departure.Time));
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtend, GetDateTimeMS (evt.Arrival.Time));
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.EventTimezone, "UTC");
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.EventEndTimezone, "UTC");
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.EventLocation, evt.Departure.Name);
+				//TODO: add reminders
+				//CalendarContract.Reminders.InterfaceConsts.EventId
+				
+				Android.Net.Uri uri = ContentResolver.Insert (CalendarContract.Events.ContentUri, eventValues);
+			} catch (Exception ex) {
+				return false;
+			}
 
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.CalendarId, calendarID);
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.Title, evt.Title);
-			//eventValues.Put (CalendarContract.Events.InterfaceConsts.Description, evt.ToString());
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtstart, GetDateTimeMS (evt.Departure.Time));
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtend, GetDateTimeMS (evt.Arrival.Time));
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.EventTimezone, "UTC");
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.EventEndTimezone, "UTC");
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.EventLocation, evt.Departure.Name);
-			//TODO: add reminders
-			//CalendarContract.Reminders.InterfaceConsts.EventId
-
-			return ContentResolver.Insert (CalendarContract.Events.ContentUri, eventValues);
+			return true;
 		}
 
 		long GetDateTimeMS (DateTime date)
@@ -166,7 +212,7 @@ namespace SNCB2Calendar
 		}
 
 
-		const char LineBreak = '\n';
+		const char LineBreak = '\n';//Environment.NewLine;
 		const string TokenType  = ")  ";
 		const string TokenDest  = "-> ";
 		const string TokenStart = "Departure ";
@@ -177,10 +223,10 @@ namespace SNCB2Calendar
 
 		readonly string[] TrainTypes = new [] { "IC", "IR", "P", "ICT", "City Rail", "L" };
 
-		List<Event> Parse (string description)
+		List<Event> Parse (string desc)
 		{
 			var events = new List<Event> ();
-			var lines = description.Split (LineBreak);
+			var lines = desc.Split (LineBreak);
 
 			Event evt = new Event ();
 			events.Add (evt);
