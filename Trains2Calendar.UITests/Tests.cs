@@ -6,7 +6,7 @@ using Xamarin.UITest;
 using Xamarin.UITest.Android;
 using Xamarin.UITest.Queries;
 
-namespace SNCB2Calendar.UITests
+namespace Trains2Calendar
 {
 	[TestFixture]
 	public class Tests

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SNCB2Calendar
+namespace Trains2Calendar
 {
 	public class Action
 	{

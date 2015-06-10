@@ -8,8 +8,7 @@ using Android.OS;
 using Android.Provider;
 using Android.Widget;
 
-//TODO: rename to Trains2Calendar
-namespace SNCB2Calendar
+namespace Trains2Calendar
 {
 	[Activity (Label = "Trains2Calendar", MainLauncher = true, Icon = "@drawable/icon")]
 

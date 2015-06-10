@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SNCB2Calendar", "SNCB2Calendar\SNCB2Calendar.csproj", "{DFCC2AB4-2206-4811-A93F-687F6A027C70}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trains2Calendar", "Trains2Calendar\Trains2Calendar.csproj", "{DFCC2AB4-2206-4811-A93F-687F6A027C70}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SNCB2Calendar.UITests", "SNCB2Calendar.UITests\SNCB2Calendar.UITests.csproj", "{A4CC1496-7983-4A08-B79C-91E5116FB9B7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trains2Calendar.UITests", "Trains2Calendar.UITests\Trains2Calendar.UITests.csproj", "{A4CC1496-7983-4A08-B79C-91E5116FB9B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

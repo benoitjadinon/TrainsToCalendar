@@ -4,7 +4,7 @@ using System.Linq;
 using System.Globalization;
 using Android.Content;
 
-namespace SNCB2Calendar
+namespace Trains2Calendar
 {
 	public class NMBSNCBParser : IParser
 	{

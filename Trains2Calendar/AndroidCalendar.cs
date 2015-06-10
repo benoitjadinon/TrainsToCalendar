@@ -2,7 +2,7 @@
 using Android.Content;
 using Android.Provider;
 
-namespace SNCB2Calendar
+namespace Trains2Calendar
 {
 	public class AndroidCalendar : ICalendar<int>
 	{

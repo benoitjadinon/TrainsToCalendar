@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SNCB2Calendar
+namespace Trains2Calendar
 {
 	public interface ISelectionView<T>
 	{
