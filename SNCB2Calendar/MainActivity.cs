@@ -11,6 +11,7 @@ using Android.Provider;
 namespace SNCB2Calendar
 {
 	[Activity (Label = "SNCB2Calendar", MainLauncher = true, Icon = "@drawable/icon")]
+
 	[IntentFilter ( new[]{ Intent.ActionInsert }, 
 		Categories = new[]{ Intent.CategoryDefault },
         DataScheme = "content",
@@ -43,6 +44,15 @@ namespace SNCB2Calendar
 
 	public class MainActivity : Activity
 	{
+		string[] calendarsProjection = {
+				CalendarContract.Calendars.InterfaceConsts.Id,
+				CalendarContract.Calendars.InterfaceConsts.CalendarDisplayName,
+				CalendarContract.Calendars.InterfaceConsts.AccountName,
+				CalendarContract.Calendars.InterfaceConsts.CalendarColor
+			};
+
+		readonly StringComparison Comp = StringComparison.InvariantCulture;
+
 		protected override void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
@@ -72,20 +82,18 @@ namespace SNCB2Calendar
 				return;
 			}
 
-			// get calendar
-			var calendarsUri = CalendarContract.Calendars.ContentUri;
-			string[] calendarsProjection = {
-			    CalendarContract.Calendars.InterfaceConsts.Id,
-			    CalendarContract.Calendars.InterfaceConsts.CalendarDisplayName,
-			    CalendarContract.Calendars.InterfaceConsts.AccountName
-			};
 			int calendarID = -1;
-			string calendarName;
-			using (var cursor = ManagedQuery (calendarsUri, calendarsProjection, null, null, null)) {
+			string calendarName, calendarAccount;
+			int calendarColor= -1;
+			using (var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null)) {
 				for (int i = 0; i < cursor.Count; i++) {
-					cursor.MoveToPosition(i);
-					calendarID = cursor.GetInt(cursor.GetColumnIndex (calendarsProjection [0]));
-					calendarName = cursor.GetString(cursor.GetColumnIndex (calendarsProjection [1]));
+					cursor.MoveToPosition (i);
+					if (calendarID == -1) {
+						calendarID = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [0]));
+						calendarName = cursor.GetString (cursor.GetColumnIndex (calendarsProjection [1]));
+						calendarAccount = cursor.GetString (cursor.GetColumnIndex (calendarsProjection [2]));
+						calendarColor = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [3]));
+					}
 				}
 			}
 
@@ -98,22 +106,25 @@ namespace SNCB2Calendar
 			}
 		}
 
-		void AddToCalendar (Event evt, int calendarID)
+		Android.Net.Uri AddToCalendar (Event evt, int calendarID)
 		{
 			if (calendarID == -1)
-				return;
+				return null;
 
 			ContentValues eventValues = new ContentValues ();
 
 			eventValues.Put (CalendarContract.Events.InterfaceConsts.CalendarId, calendarID);
-			eventValues.Put (CalendarContract.Events.InterfaceConsts.Title, string.Format("{0}) {1}", evt.Departure.Platform, evt.Departure.Name));
+			eventValues.Put (CalendarContract.Events.InterfaceConsts.Title, evt.Title);
 			//eventValues.Put (CalendarContract.Events.InterfaceConsts.Description, evt.ToString());
 			eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtstart, GetDateTimeMS (evt.Departure.Time));
 			eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtend, GetDateTimeMS (evt.Arrival.Time));
 			eventValues.Put (CalendarContract.Events.InterfaceConsts.EventTimezone, "UTC");
 			eventValues.Put (CalendarContract.Events.InterfaceConsts.EventEndTimezone, "UTC");
+			eventValues.Put (CalendarContract.Events.InterfaceConsts.EventLocation, evt.Departure.Name);
+			//TODO: add reminders
+			//CalendarContract.Reminders.InterfaceConsts.EventId
 
-			var uri = ContentResolver.Insert (CalendarContract.Events.ContentUri, eventValues);
+			return ContentResolver.Insert (CalendarContract.Events.ContentUri, eventValues);
 		}
 
 		long GetDateTimeMS (DateTime date)
@@ -134,42 +145,62 @@ namespace SNCB2Calendar
 		}
 
 
-		const string Destination = "->";
-		const string Departure   = "Departure ";
-		const string Arrival     = "Arrival ";
-		const string Platform    = "Platf. ";
-		const string HourFormat  = "HH:mm";
+		const char LineBreak = '\n';
+		const string TokenType  = ")  ";
+		const string TokenDest  = "-> ";
+		const string TokenStart = "Departure ";
+		const string TokenStop  = "Arrival ";
+		const string TokenPlat  = "Platf. ";
+		const string TokenHour  = "HH:mm";
+		const string TokenWalk  = "walk";
+
+		readonly string[] TrainTypes = new [] { "IC", "IR", "P", "ICT", "City Rail", "L" };
 
 		List<Event> Parse (string description)
 		{
 			var events = new List<Event> ();
-			var lines = description.Split ('\n');
+			var lines = description.Split (LineBreak);
 
-			Event evt = new Event();
+			Event evt = new Event ();
+			events.Add (evt);
+
 			int cnt = 0;
 			foreach (string line in lines) {
-				if (line.StartsWith (Destination)) {
-					evt = new Event(){ Name = line.Substring(3) };
-				}else if (line.Trim().StartsWith(Departure)) {
-					evt.Departure = ParseAction(line, Departure);
-				}else if (line.Trim().StartsWith(Arrival)) {
-					evt.Arrival = ParseAction(line, Arrival);
-					events.Add(evt);
+				if (line.Length == 0) {
+					evt = new Event ();
+					events.Add (evt);
+				} else if (line.Contains (TokenType)) {
+					//TODO : regexp: 0-9) 
+					evt.Name = line.Substring (line.IndexOf (TokenType, Comp) + TokenType.Length).Trim();
+					//TODO : more types
+					evt.Type = (evt.Name.Trim ().StartsWith (TokenWalk, Comp)) ? Types.Walk : Types.Train;
+					events.Add (evt);
+				}else if (TrainTypes.Any (line.Trim().StartsWith)) {
+					evt.Name = line + " " + evt.Name ?? "";
+					evt.Type = Types.Train;
+				}else if (line.StartsWith (TokenDest, Comp)) {
+					var dest = line.Substring (TokenDest.Length);
+					evt.Name = dest + " " + evt.Name ?? "";
+				}else if (line.Trim().StartsWith(TokenStart, Comp)) {
+					evt.Departure = ParseActionLine(line, TokenStart);
+				}else if (line.Trim().StartsWith(TokenStop, Comp)) {
+					evt.Arrival = ParseActionLine(line, TokenStop);
 				}
 				cnt++;
 			}
 			return events;
 		}
 
-		Action ParseAction(string line, string actiontype) {
-			int timePos = line.IndexOf(actiontype) + actiontype.Length;
-			int textPos = timePos + HourFormat.Length + 1;
-			int commaPos = line.LastIndexOf(",");
+		Action ParseActionLine(string line, string actiontype) 
+		{
+			int timePos = line.IndexOf (actiontype, Comp) + actiontype.Length;
+			int textPos = timePos + TokenHour.Length + 1;
+			int commaPos = line.LastIndexOf(",", Comp);
 
-			string timeSting = line.Substring(timePos, HourFormat.Length);
+			string timeSting = line.Substring(timePos, TokenHour.Length);
 			DateTime time = DateTime.Now;
 			try {
-				time = DateTime.ParseExact (timeSting, HourFormat, CultureInfo.InvariantCulture);
+				time = DateTime.ParseExact (timeSting, TokenHour, CultureInfo.InvariantCulture);
 			} finally {}
 
 			var action = new Action(){
@@ -181,22 +212,49 @@ namespace SNCB2Calendar
 			}else{
 				action.Name = line.Substring(textPos, commaPos - textPos);
 			}
-			if (line.Contains(Platform)){
-				action.Platform = line.Substring(line.IndexOf(Platform) + Platform.Length);
+			if (line.Contains(TokenPlat)){
+				action.Platform = line.Substring(line.IndexOf(TokenPlat, Comp) + TokenPlat.Length);
 			}
 			return action;
 		}
 
 
-		class Event{
+		class Event
+		{
+			public Types Type {get;set;}
 			public string Name {get;set;}
 			public Action Departure {get;set;}
 			public Action Arrival {get;set;}
+
+			public string Title {
+				get { 
+					return string.Format("{0}: {1} > {2}", Departure?.Platform ?? "?", Name ?? "?", Arrival?.Name ?? "?");
+				}
+			}
+
+			public override string ToString ()
+			{
+				return string.Format ("[Event: Type={0}, Name={1}, Departure={2}, Arrival={3}]", Type, Name, Departure, Arrival);
+			}
 		}
-		class Action{
+
+		class Action
+		{
 			public string Name {get;set;}
 			public string Platform {get;set;}
 			public DateTime Time {get;set;}
+
+			public override string ToString ()
+			{
+				return string.Format ("[Action: Name={0}, Platform={1}, Time={2}]", Name, Platform, Time);
+			}
+		}
+
+		enum Types 
+		{
+			Train,
+			Walk,
+			Bus,
 		}
 	}
 }
