@@ -6,6 +6,7 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Provider;
+using Android.Widget;
 
 
 namespace SNCB2Calendar
@@ -57,6 +58,10 @@ namespace SNCB2Calendar
 		{
 			base.OnCreate (bundle);
 
+			SetContentView (Resource.Layout.Main);
+
+			var listView = FindViewById<ListView> (Resource.Id.calList);
+
 			string description = null;
 			if (Intent.HasExtra ("description")) {
 				description = Intent.Extras.GetString ("description");
@@ -82,28 +87,44 @@ namespace SNCB2Calendar
 				return;
 			}
 
-			int calendarID = -1;
-			string calendarName, calendarAccount;
-			int calendarColor= -1;
-			using (var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null)) {
-				for (int i = 0; i < cursor.Count; i++) {
-					cursor.MoveToPosition (i);
-					if (calendarID == -1) {
-						calendarID = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [0]));
-						calendarName = cursor.GetString (cursor.GetColumnIndex (calendarsProjection [1]));
-						calendarAccount = cursor.GetString (cursor.GetColumnIndex (calendarsProjection [2]));
-						calendarColor = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [3]));
-					}
-				}
-			}
-
 			// parse
-			var events = Parse(description);
+			var events = Parse (description);
 
-			// fill calendar
+			int calendarID = -1;//TODO: get from local settings
+
+			if (calendarID == -1) {
+				var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
+				SimpleCursorAdapter adapter = 
+					new SimpleCursorAdapter (this, Resource.Layout.CalendarListItem, cursor, calendarsProjection, new int[] {
+					Resource.Id.calId, 
+					Resource.Id.calDisplayName, 
+					Resource.Id.calAccountName,
+					Resource.Id.calColor 
+				});
+
+				listView.Adapter = adapter;
+				listView.ItemClick += (sender, e) => {
+					cursor.MoveToPosition (e.Position);
+					calendarID = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [0]));
+
+					//TODO: store calendar id in local settings
+
+					FillCalendar (calendarID, events);
+				};
+			} else {
+				FillCalendar(calendarID, events);
+			}
+		}
+
+		void FillCalendar (int calendarID, List<Event> events)
+		{
 			foreach (var evt in events) {
 				AddToCalendar(evt, calendarID);
 			}
+
+			Toast.MakeText(this, Android.Resource.String.Ok, ToastLength.Short).Show();
+
+			Finish();
 		}
 
 		Android.Net.Uri AddToCalendar (Event evt, int calendarID)
