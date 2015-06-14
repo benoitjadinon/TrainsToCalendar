@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 using Android.Content;
+using System.Text.RegularExpressions;
 
 namespace Trains2Calendar
 {
@@ -15,64 +16,71 @@ namespace Trains2Calendar
 		const string TokenDest = "-> ";
 		const string TokenHour = "HH:mm";
 
-		readonly string[] TrainTypes = new [] { "IC", "IR", "P", "ICT", "City Rail", "L" };
+		string tokenStart;
+		string tokenStop;
+		string tokenWalk;
+		string tokenPlatform;
 
-		Context context;
+		readonly string[] TrainTypes = new [] { "IC", "IR", "P", "ICT", "City Rail", "L" };
 
 		public NMBSNCBParser (Context context)
 		{
-			this.context = context;
+			tokenStart = context.GetString (Resource.String.token_start);       // = "Departure ";
+			tokenStop = context.GetString (Resource.String.token_stop);         // = "Arrival ";
+			tokenWalk = context.GetString (Resource.String.token_walk);         // = "walk";
+			tokenPlatform = context.GetString (Resource.String.token_platform); // = "Platf. ";
 		}
 
 		#region IParser implementation
 
-		public IList<Event> Parse (string descriptionToParse)
+		public IList<Event> Parse (string descriptionToParse, DateTime day)
 		{
-			//TODO: translate from nl/fr app
-			string tokenStart = context.GetString(Resource.String.token_start);   // = "Departure ";
-			string tokenStop = context.GetString(Resource.String.token_stop);     // = "Arrival ";
-			string tokenPlat = context.GetString(Resource.String.token_platform); // = "Platf. ";
-			string tokenWalk = context.GetString(Resource.String.token_walk);     // = "walk";
-			string platformAbbr = context.GetString(Resource.String.platform_abbr);//= "Pf."
-
 			var events = new List<Event> ();
 			var lines = descriptionToParse.Split (LineBreak);
 
 			Event evt = null;
 			int cnt = 0;
-			foreach (string line in lines) 
-			{
-				if (line.Length == 0 || cnt == 0) 
-				{
-					evt = new Event (platformAbbr);
+			foreach (string line in lines) {
+				if (line.Length == 0 || cnt == 0) {
+					evt = new Event ();
 					events.Add (evt);
 				}
 
-				if (line.Contains (TokenType)) 
-				{
-					//TODO : regexp: 0-9) 
-					evt.Name = line.Substring (line.IndexOf (TokenType, Comp) + TokenType.Length).Trim () + (evt.Name != null ?  " " + evt?.Name : "");
-					//TODO : more types
-					evt.Type = (evt.Name.Trim ().StartsWith (tokenWalk, Comp)) ? Types.Walk : Types.Train;
+				int step = -1;
+				Match stepMatch;
+				if (line.Contains (TokenType) && (stepMatch = Regex.Match (line, "([0-9]{1,3})(?=" + Regex.Escape (TokenType) + ")")).Success) {
+					step = Convert.ToInt32(stepMatch.Value);
+
+					evt.Name = line.Substring (line.IndexOf (TokenType, Comp) + TokenType.Length).Trim () + (evt.Name != null ? " " + evt?.Name : "");//.Trim();
+
+					if (TrainTypes.Any (trainType => line.Trim ().ToLowerInvariant ().StartsWith (trainType.ToLowerInvariant (), Comp))) {
+						evt.Name = line + (evt.Name != null ? " " + evt?.Name : "");//.Trim();
+						evt.Type = TransportTypes.Train;
+					} else {
+						//TODO : support more types
+						evt.Type = (evt.Name.Trim ().StartsWith (tokenWalk, Comp)) ? TransportTypes.Walk : TransportTypes.Train;
+					}
+
 					events.Add (evt);
 				}
 				else if (TrainTypes.Any (trainType => line.Trim ().ToLowerInvariant ().StartsWith (trainType.ToLowerInvariant (), Comp))) 
 				{
-					evt.Name = line + (evt.Name != null ?  " " + evt?.Name : "");
-					evt.Type = Types.Train;
+					evt.Name = line + (evt.Name != null ?  " " + evt?.Name : "");//.Trim();
+					evt.Type = TransportTypes.Train;
+					events.Add (evt);
 				}
 				else if (line.StartsWith (TokenDest, Comp)) 
 				{
 					var dest = line.Substring (TokenDest.Length);
-					evt.Name = dest + " " + evt?.Name ?? "";
+					evt.Name = (dest + " " + evt?.Name ?? "");//.Trim();
 				}
 				else if (line.Trim ().StartsWith (tokenStart, Comp)) 
 				{
-					evt.Departure = ParseActionLine (line, tokenStart, tokenPlat);
+					evt.Departure = ParseActionLine (line, tokenStart, tokenPlatform, day);
 				}
 				else if (line.Trim ().StartsWith (tokenStop, Comp))
 				{
-					evt.Arrival = ParseActionLine (line, tokenStop, tokenPlat);
+					evt.Arrival = ParseActionLine (line, tokenStop, tokenPlatform, day);
 				}
 
 				cnt++;
@@ -82,32 +90,39 @@ namespace Trains2Calendar
 
 		#endregion
 
-		Action ParseActionLine (string line, string actiontype, string tokenPlat)
+		Action ParseActionLine (string line, string actiontype, string tokenPlatform, DateTime day)
 		{
+			line = line.Trim();
+
 			int timePos = line.IndexOf (actiontype, Comp) + actiontype.Length;
 			int textPos = timePos + TokenHour.Length + 1;
 			int commaPos = line.LastIndexOf (",", Comp);
 
 			string timeSting = line.Substring (timePos, TokenHour.Length);
-			DateTime time = DateTime.Now;
+			DateTime dayAndTime = day;
 			try {
-				time = DateTime.ParseExact (timeSting, TokenHour, CultureInfo.InvariantCulture);
-			} finally {
-			}
+				DateTime timeHour = DateTime.ParseExact (timeSting, TokenHour, CultureInfo.InvariantCulture);
+				dayAndTime = day.Date.AddHours(timeHour.Hour).AddMinutes(timeHour.Minute);
+			} catch(Exception) {}
 
-			var action = new Action () {
-				Time = time,
-			};
-
+			string name = null;
 			if (commaPos == -1) {
-				action.Name = line.Substring (textPos);
+				name = line.Substring (textPos).Trim();
 			} else {
-				action.Name = line.Substring (textPos, commaPos - textPos);
+				name = line.Substring (textPos, commaPos - textPos).Trim();
 			}
-			if (line.Contains (tokenPlat)) {
-				action.Platform = line.Substring (line.IndexOf (tokenPlat, Comp) + tokenPlat.Length);
+
+			string platform = null;
+			if (line.Contains (tokenPlatform)) {
+				platform = line.Substring (line.IndexOf (tokenPlatform, Comp) + tokenPlatform.Length);
+				platform = platform.Trim();
 			}
-			return action;
+
+			return new Action {
+				Time = dayAndTime,
+				Name = name,
+				Platform = platform,
+			};
 		}
 	}
 }

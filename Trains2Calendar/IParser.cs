@@ -5,7 +5,7 @@ namespace Trains2Calendar
 {
 	public interface IParser
 	{
-		IList<Event> Parse (string descriptionToParse);
+		IList<Event> Parse (string descriptionToParse, DateTime day);
 	}
 }
 

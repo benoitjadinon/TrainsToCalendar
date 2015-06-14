@@ -6,11 +6,11 @@
 	<string name="events_add_error">Erreur, trajet(s) non ajoutés au calendrier</string>
 	<string name="description_parse_error">Impossible de lire le contenu, est-ce un format SNCB correct ?</string>
 	<string name="calendar_always_same">Toujours utiliser le calendrier sélectionné</string>
-	<string name="platform_abbr">Qu.</string>
+	<string name="platform_abbr">"Voie "</string>
 
-	<string name="token_start">Départ </string>
-	<string name="token_stop">Arrivée </string>
-	<string name="token_platform">Quai </string>
-	<string name="token_walk">marcher</string>
+	<string name="token_start">"Départ "</string>
+	<string name="token_stop">"Arrivées "</string><!-- (sic) -->
+	<string name="token_platform">"Voie "</string>
+	<string name="token_walk">"marcher "</string>
 
 </resources>

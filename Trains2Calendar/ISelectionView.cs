@@ -5,10 +5,10 @@ namespace Trains2Calendar
 {
 	public interface ISelectionView<T>
 	{
-		void ParseAndFillCalendar (string stringToParse);
+		void ParseAndFillCalendar (string stringToParse, DateTime day);
 
-		T getSavedCalendarID ();
-		void saveSelectedCalendarID (T calendarID);
+		T GetSavedCalendarID ();
+		void SaveSelectedCalendarID (T calendarID);
 
 		IParser GetParser();
 		ICalendar<T> GetCalendar();

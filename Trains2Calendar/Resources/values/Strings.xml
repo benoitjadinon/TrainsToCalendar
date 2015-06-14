@@ -8,9 +8,9 @@
 	<string name="calendar_always_same">Always use the selected calendar</string>
 	<string name="platform_abbr">Pf.</string>
 
-	<string name="token_start">Departure </string>
-	<string name="token_stop">Arrival </string>
-	<string name="token_platform">Platf. </string>
-	<string name="token_walk">walk</string>
+	<string name="token_start">"Departure "</string>
+	<string name="token_stop">"Arrival "</string>
+	<string name="token_platform">"Platf. "</string>
+	<string name="token_walk">"walk "</string>
 
 </resources>

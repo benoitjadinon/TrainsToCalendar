@@ -47,6 +47,7 @@ namespace Trains2Calendar
 	public class MainActivity : Activity, ISelectionView<int>
 	{
 		const string IntentExtraDescription = "description";
+		const string IntentExtraBeginTime = "beginTime";
 
 		string[] calendarsProjection = {
 			CalendarContract.Calendars.InterfaceConsts.Id,
@@ -87,17 +88,20 @@ namespace Trains2Calendar
 		{
 			base.OnCreate (savedInstanceState);
 
+			// get values from intent
+
 			string stringToParse = null;
-			//TODO: add check if opened from drawer or from share intent
+			DateTime day = DateTime.Today;
 			if (Intent.HasExtra (IntentExtraDescription)) {
-				stringToParse = Intent.Extras.GetString (IntentExtraDescription);
-			} else {
-				Finish (Resource.String.description_parse_error);
+				if (Intent.Extras.ContainsKey(IntentExtraDescription)) 
+					stringToParse = Intent.Extras.GetString (IntentExtraDescription);
+				if (Intent.Extras.ContainsKey(IntentExtraBeginTime)) {
+					long ms = Intent.Extras.GetLong (IntentExtraBeginTime);
+					day = new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds (ms).ToLocalTime ();
+	            }
 			}
-			if (stringToParse == null) {
-				Finish (Resource.String.description_parse_error);
-				return;
-			}
+
+			// setup view
 
 			SetContentView (Resource.Layout.Main);
 
@@ -105,13 +109,13 @@ namespace Trains2Calendar
 			cbAlways = FindViewById<CheckBox> (Resource.Id.cbAlways);
 
 			btOK = FindViewById<Button> (Resource.Id.btOK);
-			btOK.Click += (sender, e) => ParseAndFillCalendar (stringToParse);
+			btOK.Click += (sender, e) => ParseAndFillCalendar (stringToParse, day);
 
 			var btCancel = FindViewById<Button> (Resource.Id.btCancel);
 			btCancel.Click += (sender, e) => Finish ();
 
 			// calendars
-			//TODO calendarID = get from settings
+			//TODO calendarID = get from settings -> preselect calendar
 			var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
 			SimpleCursorAdapter adapter = 
 				new SimpleCursorAdapter (this, Resource.Layout.CalendarListItem, cursor, calendarsProjection, new int[] {
@@ -122,7 +126,7 @@ namespace Trains2Calendar
 				}
 			);
 
-			selectedCalendarID = getSavedCalendarID();
+			selectedCalendarID = GetSavedCalendarID();
 			if (selectedCalendarID != -1) {
 				//TODO: pre-select with calendarID
 				UpdateState ();
@@ -131,9 +135,6 @@ namespace Trains2Calendar
 			lvCalendars.ItemClick += (sender, e) => {
 				cursor.MoveToPosition (e.Position);
 				selectedCalendarID = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [0]));
-
-				//TODO: store calendar id in local settings
-				saveSelectedCalendarID(selectedCalendarID);
 
 				UpdateState ();
 			};
@@ -146,22 +147,30 @@ namespace Trains2Calendar
 
 		#region IMainActivity implementation
 
-		public int getSavedCalendarID ()
+		public int GetSavedCalendarID ()
 		{
 			//TODO, get from settings
 			//throw new NotImplementedException ();
 			return -1;
 		}
 
-		public void saveSelectedCalendarID (int calendarID)
+		public void SaveSelectedCalendarID (int calendarID)
 		{
-			//TODO
+			//TODO: store calendar id in local settings
 		}
 
-		public void ParseAndFillCalendar (string stringToParse)
+		public void ParseAndFillCalendar (string stringToParse, DateTime day)
 		{
+			if (cbAlways.Checked) 
+				SaveSelectedCalendarID(selectedCalendarID);
+
+			if (stringToParse == null) {
+				//Finish (Resource.String.description_parse_error);
+				return;
+			}
+
 			// parse
-			var events = GetParser().Parse (stringToParse);
+			var events = GetParser().Parse (stringToParse, day);
 
 			// add
 			var result = GetCalendar().AddEvents(events, selectedCalendarID);
@@ -179,7 +188,7 @@ namespace Trains2Calendar
 		ICalendar<int> calendar;
 		public ICalendar<int> GetCalendar ()
 		{
-			return calendar ?? (calendar = new AndroidCalendar(ContentResolver));
+			return calendar ?? (calendar = new AndroidCalendar(this));
 		}
 
 		#endregion

@@ -2,11 +2,13 @@
 
 namespace Trains2Calendar
 {
-	public enum Types
+	public enum TransportTypes
 	{
 		Train,
 		Walk,
 		Bus,
+		Tram,
+		Metro,
 	}
 }
 

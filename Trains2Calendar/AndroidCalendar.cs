@@ -6,12 +6,13 @@ namespace Trains2Calendar
 {
 	public class AndroidCalendar : ICalendar<int>
 	{
-		ContentResolver contentResolver;
+		readonly ContentResolver contentResolver;
+		readonly string platformAbbr;
 
-		public AndroidCalendar (ContentResolver contentResolver)
+		public AndroidCalendar (Context context)
 		{
-			this.contentResolver = contentResolver;
-			
+			this.contentResolver = context.ContentResolver;
+			this.platformAbbr = context.GetString (Resource.String.platform_abbr);   //= "Pf."
 		}
 
 		#region ICalendar implementation
@@ -34,7 +35,7 @@ namespace Trains2Calendar
 				ContentValues eventValues = new ContentValues ();
 				
 				eventValues.Put (CalendarContract.Events.InterfaceConsts.CalendarId, calendarID);
-				eventValues.Put (CalendarContract.Events.InterfaceConsts.Title, evt.Title);
+				eventValues.Put (CalendarContract.Events.InterfaceConsts.Title, GetTitle(evt));
 				//eventValues.Put (CalendarContract.Events.InterfaceConsts.Description, evt.ToString());
 				eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtstart, GetDateTimeMS (evt.Departure.Time));
 				eventValues.Put (CalendarContract.Events.InterfaceConsts.Dtend, GetDateTimeMS (evt.Arrival.Time));
@@ -44,8 +45,8 @@ namespace Trains2Calendar
 				//TODO: add reminders
 				//CalendarContract.Reminders.InterfaceConsts.EventId
 				
-				Android.Net.Uri uri = contentResolver.Insert (CalendarContract.Events.ContentUri, eventValues);
-			} catch (Exception ex) {
+				contentResolver.Insert (CalendarContract.Events.ContentUri, eventValues);
+			} catch (Exception) {
 				return false;
 			}
 
@@ -68,6 +69,11 @@ namespace Trains2Calendar
 			c.Set (Java.Util.CalendarField.Year, yr);
 
 			return c.TimeInMillis;
+		}
+
+		public string GetTitle (Event e)
+		{
+			return string.Format ("{0}{1}-{2} -> {3}", platformAbbr, e.Departure?.Platform ?? "", e.Name ?? "", e.Arrival?.Name ?? "?");
 		}
 
 		#endregion

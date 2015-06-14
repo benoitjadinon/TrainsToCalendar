@@ -14,8 +14,6 @@ namespace Trains2Calendar
 	{
 		bool AddEvent (Event evt, T calendarID);
 		bool AddEvents(IList<Event> events, T calendarID);
+		string GetTitle (Event e);
 	}
-
 }
-
-

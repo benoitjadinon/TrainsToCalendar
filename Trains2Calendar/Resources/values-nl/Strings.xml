@@ -6,5 +6,11 @@
 	<string name="events_add_error">Error, event(s) not added to the calendar</string>
 	<string name="description_parse_error">Cannot parse the content, is it a correct SNCB/NMBS journey format ?</string>
 	<string name="calendar_always_same">Always use the selected calendar</string>
-	<string name="platform_abbr">Spr.</string>
+	<string name="platform_abbr">Sp.</string>
+
+	<string name="token_start">"Vertrek "</string>
+	<string name="token_stop">"Aankomst "</string>
+	<string name="token_platform">"Spoor "</string>
+	<string name="token_walk">"Weg te voet "</string>
+
 </resources>
