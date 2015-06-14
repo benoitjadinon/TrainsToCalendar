@@ -1,3 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
+	<!--<string name="app_name">SNCB2Calendar</string>-->
+
+	<string name="events_added">Reise in den Zeitplan aufgenommen</string>
+	<string name="events_add_error">Fehler, nicht auf den Fluglinienplan hinzugefügt</string>
+	<string name="description_parse_error">Können den Inhalt nicht lesen, ist es richtig Format?</string>
+	<string name="calendar_always_same">Immer mit dem ausgewählten Kalender</string>
+	<string name="platform_abbr">"Gl. "</string>
+
+	<string name="token_start">"Abfahrt "</string>
+	<string name="token_stop">"Ankunft "</string>
+	<string name="token_platform">"Gleis "</string>
+	<string name="token_walk">"Fußweg "</string>
+
 </resources>

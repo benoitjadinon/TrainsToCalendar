@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">NMBS2Calendar</string>
+	<!--<string name="app_name">NMBS2Calendar</string>-->
 
 	<string name="events_added">Event(s) added to the calendar</string>
 	<string name="events_add_error">Error, event(s) not added to the calendar</string>

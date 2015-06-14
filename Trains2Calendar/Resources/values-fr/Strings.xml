@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">SNCB2Calendar</string>
+	<!--<string name="app_name">SNCB2Calendar</string>-->
 
 	<string name="events_added">Trajet(s) ajouté(s) au calendrier</string>
 	<string name="events_add_error">Erreur, trajet(s) non ajoutés au calendrier</string>
