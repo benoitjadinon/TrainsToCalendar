@@ -7,6 +7,8 @@ using Android.Content;
 using Android.OS;
 using Android.Provider;
 using Android.Widget;
+using Android.Database;
+using Android.Views;
 
 namespace Trains2Calendar
 {
@@ -117,14 +119,7 @@ namespace Trains2Calendar
 			// calendars
 			//TODO calendarID = get from settings -> preselect calendar
 			var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
-			SimpleCursorAdapter adapter = 
-				new SimpleCursorAdapter (this, Resource.Layout.CalendarListItem, cursor, calendarsProjection, new int[] {
-					Resource.Id.calId, 
-					Resource.Id.calDisplayName, 
-					Resource.Id.calAccountName,
-					Resource.Id.calColor 
-				}
-			);
+			CalendarsAdapter adapter = new CalendarsAdapter (this, cursor, calendarsProjection);
 
 			selectedCalendarID = GetSavedCalendarID();
 			if (selectedCalendarID != -1) {
@@ -134,7 +129,7 @@ namespace Trains2Calendar
 			lvCalendars.Adapter = adapter;
 			lvCalendars.ItemClick += (sender, e) => {
 				cursor.MoveToPosition (e.Position);
-				selectedCalendarID = cursor.GetInt (cursor.GetColumnIndex (calendarsProjection [0]));
+				selectedCalendarID = cursor.GetInt (calendarsProjection.ToList().IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
 
 				UpdateState ();
 			};
@@ -203,6 +198,29 @@ namespace Trains2Calendar
 			Toast.MakeText (Application.Context, message, ToastLength.Long).Show ();
 
 			Finish ();
+		}
+	}
+
+	class CalendarsAdapter : SimpleCursorAdapter 
+	{
+		readonly string[] projection;
+
+		public CalendarsAdapter (Context context, ICursor c, string[] projection) : base(context, Resource.Layout.CalendarListItem, c, projection, new int[] {
+					Resource.Id.calId, 
+					Resource.Id.calDisplayName, 
+					Resource.Id.calAccountName,
+					Resource.Id.calColor
+				})
+		{
+			this.projection = projection;
+		
+		}
+
+		public override void BindView (Android.Views.View view, Context context, ICursor cursor)
+		{
+			base.BindView (view, context, cursor);
+			var color = cursor.GetInt(projection.ToList().IndexOf(CalendarContract.Calendars.InterfaceConsts.CalendarColor));
+			view.FindViewById<View>(Resource.Id.calColorSwatch).SetBackgroundColor(new Android.Graphics.Color(color));
 		}
 	}
 }
