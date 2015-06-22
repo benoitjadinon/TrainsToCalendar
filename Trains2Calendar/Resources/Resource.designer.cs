@@ -60,11 +60,11 @@ namespace Trains2Calendar
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f050007
-			public const int btCancel = 2131034119;
-			
 			// aapt resource value: 0x7f050008
-			public const int btOK = 2131034120;
+			public const int btCancel = 2131034120;
+			
+			// aapt resource value: 0x7f050009
+			public const int btOK = 2131034121;
 			
 			// aapt resource value: 0x7f050003
 			public const int calAccountName = 2131034115;
@@ -81,11 +81,14 @@ namespace Trains2Calendar
 			// aapt resource value: 0x7f050001
 			public const int calId = 2131034113;
 			
+			// aapt resource value: 0x7f050007
+			public const int cbAlways = 2131034119;
+			
 			// aapt resource value: 0x7f050006
-			public const int cbAlways = 2131034118;
+			public const int lvCalendars = 2131034118;
 			
 			// aapt resource value: 0x7f050005
-			public const int lvCalendars = 2131034117;
+			public const int txtIntro = 2131034117;
 			
 			static Id()
 			{
@@ -134,20 +137,26 @@ namespace Trains2Calendar
 			// aapt resource value: 0x7f040001
 			public const int events_added = 2130968577;
 			
+			// aapt resource value: 0x7f040006
+			public const int intro = 2130968582;
+			
+			// aapt resource value: 0x7f040007
+			public const int intro_create = 2130968583;
+			
 			// aapt resource value: 0x7f040005
 			public const int platform_abbr = 2130968581;
 			
+			// aapt resource value: 0x7f04000a
+			public const int token_platform = 2130968586;
+			
 			// aapt resource value: 0x7f040008
-			public const int token_platform = 2130968584;
-			
-			// aapt resource value: 0x7f040006
-			public const int token_start = 2130968582;
-			
-			// aapt resource value: 0x7f040007
-			public const int token_stop = 2130968583;
+			public const int token_start = 2130968584;
 			
 			// aapt resource value: 0x7f040009
-			public const int token_walk = 2130968585;
+			public const int token_stop = 2130968585;
+			
+			// aapt resource value: 0x7f04000b
+			public const int token_walk = 2130968587;
 			
 			static String()
 			{

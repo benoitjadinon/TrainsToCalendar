@@ -7,6 +7,8 @@
 	<string name="description_parse_error">Cannot parse the content, is it a correct SNCB/NMBS journey format ?</string>
 	<string name="calendar_always_same">Always use the selected calendar</string>
 	<string name="platform_abbr">Pf.</string>
+	<string name="intro">Select a default calendar</string>
+	<string name="intro_create">Select a calendar to create the events into</string>
 
 	<string name="token_start">"Departure "</string>
 	<string name="token_stop">"Arrival "</string>

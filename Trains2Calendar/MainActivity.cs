@@ -94,13 +94,13 @@ namespace Trains2Calendar
 
 			string stringToParse = null;
 			DateTime day = DateTime.Today;
-			if (Intent.HasExtra (IntentExtraDescription)) {
-				if (Intent.Extras.ContainsKey(IntentExtraDescription)) 
+			if (HasReceivedEvents) {
+				if (Intent.Extras.ContainsKey (IntentExtraDescription))
 					stringToParse = Intent.Extras.GetString (IntentExtraDescription);
-				if (Intent.Extras.ContainsKey(IntentExtraBeginTime)) {
+				if (Intent.Extras.ContainsKey (IntentExtraBeginTime)) {
 					long ms = Intent.Extras.GetLong (IntentExtraBeginTime);
 					day = new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds (ms).ToLocalTime ();
-	            }
+				}
 			}
 
 			// setup view
@@ -115,6 +115,11 @@ namespace Trains2Calendar
 
 			var btCancel = FindViewById<Button> (Resource.Id.btCancel);
 			btCancel.Click += (sender, e) => Finish ();
+
+			if (HasReceivedEvents) {
+				var introTxt = FindViewById<TextView> (Resource.Id.txtIntro);
+				introTxt.Text = GetString( Resource.String.intro_create);
+			}
 
 			// calendars
 			//TODO calendarID = get from settings -> preselect calendar
@@ -133,6 +138,12 @@ namespace Trains2Calendar
 
 				UpdateState ();
 			};
+		}
+
+		bool HasReceivedEvents {
+			get { 
+				return (Intent != null && Intent.HasExtra (IntentExtraDescription) && Intent.HasExtra (IntentExtraBeginTime)); 
+			}
 		}
 
 		void UpdateState ()
