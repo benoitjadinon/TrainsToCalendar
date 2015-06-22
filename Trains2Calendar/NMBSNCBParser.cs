@@ -12,7 +12,7 @@ namespace Trains2Calendar
 		const StringComparison Comp = StringComparison.InvariantCulture;
 
 		const char LineBreak = '\n'; //Environment.NewLine;
-		const string TokenType = ")  ";
+		const string TokenType = ")\t";
 		const string TokenDest = "-> ";
 		const string TokenHour = "HH:mm";
 
@@ -49,7 +49,7 @@ namespace Trains2Calendar
 				int step = -1;
 				Match stepMatch;
 				if (line.Contains (TokenType) && (stepMatch = Regex.Match (line, "([0-9]{1,3})(?=" + Regex.Escape (TokenType) + ")")).Success) {
-					step = Convert.ToInt32(stepMatch.Value);
+					evt.Step = Convert.ToUInt32(stepMatch.Value);
 
 					evt.Name = line.Substring (line.IndexOf (TokenType, Comp) + TokenType.Length).Trim () + (evt.Name != null ? " " + evt?.Name : "");//.Trim();
 
@@ -61,13 +61,13 @@ namespace Trains2Calendar
 						evt.Type = (evt.Name.Trim ().StartsWith (tokenWalk, Comp)) ? TransportTypes.Walk : TransportTypes.Train;
 					}
 
-					events.Add (evt);
+					//events.Add (evt);
 				}
 				else if (TrainTypes.Any (trainType => line.Trim ().ToLowerInvariant ().StartsWith (trainType.ToLowerInvariant (), Comp))) 
 				{
 					evt.Name = line + (evt.Name != null ?  " " + evt?.Name : "");//.Trim();
 					evt.Type = TransportTypes.Train;
-					events.Add (evt);
+					//events.Add (evt);
 				}
 				else if (line.StartsWith (TokenDest, Comp)) 
 				{
