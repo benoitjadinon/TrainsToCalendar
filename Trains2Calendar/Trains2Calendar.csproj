@@ -45,24 +45,35 @@
     <Reference Include="Xamarin.Mobile">
       <HintPath>Components\xamarin.mobile-0.7.5\lib\android\Xamarin.Mobile.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\portable-net40+sl5+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Acr.Settings">
+      <HintPath>..\packages\Acr.Settings.4.2.2\lib\MonoAndroid10\Acr.Settings.dll</HintPath>
+    </Reference>
+    <Reference Include="Acr.Settings.Interface">
+      <HintPath>..\packages\Acr.Settings.4.2.2\lib\MonoAndroid10\Acr.Settings.Interface.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IParser.cs" />
-    <Compile Include="Event.cs" />
-    <Compile Include="Action.cs" />
     <Compile Include="ICalendar.cs" />
     <Compile Include="AndroidCalendar.cs" />
     <Compile Include="ISelectionView.cs" />
     <Compile Include="NMBSNCBParser.cs" />
     <Compile Include="TransportTypes.cs" />
+    <Compile Include="Model\Action.cs" />
+    <Compile Include="Model\Event.cs" />
+    <Compile Include="Extensions\BundleExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Assets\AboutAssets.txt" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />
@@ -88,5 +99,7 @@
     <Folder Include="Resources\values-fr\" />
     <Folder Include="Resources\values-nl\" />
     <Folder Include="Resources\values-de\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Model\" />
   </ItemGroup>
 </Project>

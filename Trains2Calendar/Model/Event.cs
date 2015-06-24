@@ -14,10 +14,7 @@ namespace Trains2Calendar
 
 		public Action Arrival { get; set; }
 
-		public override string ToString ()
-		{
-			return string.Format ("[Event: Step={4}, Type={0}, Name={1}, Departure={2}, Arrival={3}]", Type, Name, Departure, Arrival, Step);
-		}
+		public override string ToString () =>  string.Format ("[Event: Step={4}, Type={0}, Name={1}, Departure={2}, Arrival={3}]", Type, Name, Departure, Arrival, Step);
 	}
 }
 

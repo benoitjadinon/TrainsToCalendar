@@ -10,10 +10,7 @@ namespace Trains2Calendar
 
 		public DateTime Time { get; set; }
 
-		public override string ToString ()
-		{
-			return string.Format ("[Action: Name={0}, Platform={1}, Time={2}]", Name, Platform, Time);
-		}
+		public override string ToString () => string.Format ("[Action: Name={0}, Platform={1}, Time={2}]", Name, Platform, Time);
 	}
 }
 

@@ -9,6 +9,7 @@ using Android.Provider;
 using Android.Widget;
 using Android.Database;
 using Android.Views;
+using Acr.Settings;
 
 namespace Trains2Calendar
 {
@@ -51,6 +52,8 @@ namespace Trains2Calendar
 		const string IntentExtraDescription = "description";
 		const string IntentExtraBeginTime = "beginTime";
 
+		const string SettingSelectedCalendarID = "SelectedCalendarID";
+
 		string[] calendarsProjection = {
 			CalendarContract.Calendars.InterfaceConsts.Id,
 			CalendarContract.Calendars.InterfaceConsts.CalendarDisplayName,
@@ -62,35 +65,35 @@ namespace Trains2Calendar
 		CheckBox cbAlways;
 		Button btOK;
 
-		int selectedCalendarID;
+		ISettings settings;
+
+		CalendarsAdapter adapter;
+
+
+		public int SelectedCalendarID { get; set; } = -1;
 
 
 		public MainActivity ()
 		{
-			#if DEBUG
-			/*if (stringToParse == null) {
-				stringToParse = "1)walk 4 minutes";
-				stringToParse += "\n Departure 06:10 Namur";
-				stringToParse += "\n Arrival 06:14 Gare";
-				stringToParse += "\n";
-				stringToParse += "\nIC 2127";
-				stringToParse += "\n-> Brussel-Zuid / Bruxelles-Midi";
-				stringToParse += "\n Departure 06:14 Namur, Platf. 9";
-				stringToParse += "\n Arrival 07:27 Bruxelles-Zuid / Bruxelles-Midi, Platf. 14";
-				stringToParse += "\n";
-				stringToParse += "\nIC 428";
-				stringToParse += "\n-> Kortrijk";
-				stringToParse += "\n Departure 07:33 Bruxelles-Zuid / Bruxelles-Midi, Platf. 11";
-				stringToParse += "\n Arrival 08:08 Gent-Sint-Pieters, Platf. 8";
-			}*/
-			#endif
+			settings = Acr.Settings.Settings.Local;
 		}
+
 
 		protected override void OnCreate (Bundle savedInstanceState)
 		{
 			base.OnCreate (savedInstanceState);
+			savedInstanceState.Get("");
+			// restore state
+			SelectedCalendarID = savedInstanceState.Get(() => SelectedCalendarID, -1);
+			if (SelectedCalendarID == -1) 
+				SelectedCalendarID = GetSavedCalendarID();
+			/*if (savedInstanceState != null && savedInstanceState.ContainsKey(nameof(SelectedCalendarID)))
+				SelectedCalendarID = savedInstanceState.GetInt(nameof(SelectedCalendarID));
+			else
+				SelectedCalendarID = GetSavedCalendarID();
+				*/
 
-			// get values from intent
+			// get values from intent, if any
 
 			string stringToParse = null;
 			DateTime day = DateTime.Today;
@@ -107,37 +110,46 @@ namespace Trains2Calendar
 
 			SetContentView (Resource.Layout.Main);
 
-			lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
 			cbAlways = FindViewById<CheckBox> (Resource.Id.cbAlways);
 
 			btOK = FindViewById<Button> (Resource.Id.btOK);
 			btOK.Click += (sender, e) => ParseAndFillCalendar (stringToParse, day);
+			btOK.Selected &= GetSavedCalendarID () != -1;
 
 			var btCancel = FindViewById<Button> (Resource.Id.btCancel);
 			btCancel.Click += (sender, e) => Finish ();
 
+			var introTxt = FindViewById<TextView> (Resource.Id.txtIntro);
 			if (HasReceivedEvents) {
-				var introTxt = FindViewById<TextView> (Resource.Id.txtIntro);
-				introTxt.Text = GetString( Resource.String.intro_create);
+				introTxt.Text = GetString (Resource.String.intro_create);
+			} else {
+				introTxt.Text = GetString (Resource.String.intro);
 			}
 
 			// calendars
 			//TODO calendarID = get from settings -> preselect calendar
 			var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
-			CalendarsAdapter adapter = new CalendarsAdapter (this, cursor, calendarsProjection);
+			adapter = new CalendarsAdapter (this, cursor, calendarsProjection, () => SelectedCalendarID );
 
-			selectedCalendarID = GetSavedCalendarID();
-			if (selectedCalendarID != -1) {
-				//TODO: pre-select with calendarID
-				UpdateState ();
-			}
+			UpdateState ();
+
+			lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
 			lvCalendars.Adapter = adapter;
 			lvCalendars.ItemClick += (sender, e) => {
 				cursor.MoveToPosition (e.Position);
-				selectedCalendarID = cursor.GetInt (calendarsProjection.ToList().IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
+				SelectedCalendarID = cursor.GetInt (calendarsProjection.ToList().IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
+
+				lvCalendars.Invalidate();
 
 				UpdateState ();
 			};
+		}
+
+		protected override void OnSaveInstanceState (Bundle outState)
+		{
+			base.OnSaveInstanceState (outState);
+			//outState.PutInt(nameof(SelectedCalendarID), SelectedCalendarID);
+			outState.Put(() => SelectedCalendarID);
 		}
 
 		bool HasReceivedEvents {
@@ -148,30 +160,29 @@ namespace Trains2Calendar
 
 		void UpdateState ()
 		{
-			btOK.Enabled = selectedCalendarID > -1;
+			btOK.Enabled = SelectedCalendarID > -1;
 		}
 
 		#region IMainActivity implementation
 
 		public int GetSavedCalendarID ()
 		{
-			//TODO, get from settings
-			//throw new NotImplementedException ();
-			return -1;
+			return settings.Get(SettingSelectedCalendarID, -1);
 		}
 
 		public void SaveSelectedCalendarID (int calendarID)
 		{
-			//TODO: store calendar id in local settings
+			settings.Set (SettingSelectedCalendarID, calendarID);
 		}
 
 		public void ParseAndFillCalendar (string stringToParse, DateTime day)
 		{
-			if (cbAlways.Checked) 
-				SaveSelectedCalendarID(selectedCalendarID);
+			SaveSelectedCalendarID((cbAlways.Checked) ? SelectedCalendarID : -1);
 
+			// just saving, not coming from an Intent
 			if (stringToParse == null) {
 				//Finish (Resource.String.description_parse_error);
+				Finish ();
 				return;
 			}
 
@@ -179,7 +190,7 @@ namespace Trains2Calendar
 			var events = GetParser().Parse (stringToParse, day);
 
 			// add
-			var result = GetCalendar().AddEvents(events, selectedCalendarID);
+			var result = GetCalendar().AddEvents(events, SelectedCalendarID);
 
 			//
 			Finish (result ? Resource.String.events_added : Resource.String.events_add_error);
@@ -212,26 +223,34 @@ namespace Trains2Calendar
 		}
 	}
 
+
 	class CalendarsAdapter : SimpleCursorAdapter 
 	{
-		readonly string[] projection;
+		readonly List<String> projection;
 
-		public CalendarsAdapter (Context context, ICursor c, string[] projection) : base(context, Resource.Layout.CalendarListItem, c, projection, new int[] {
+		readonly Func<int> getSelectedIndexFunc;
+
+		public CalendarsAdapter (Context context, ICursor c, string[] projection, Func<int> getSelected) : base(context, Resource.Layout.CalendarListItem, c, projection, new int[] {
 					Resource.Id.calId, 
 					Resource.Id.calDisplayName, 
 					Resource.Id.calAccountName,
 					Resource.Id.calColor
 				})
 		{
-			this.projection = projection;
-		
+			this.getSelectedIndexFunc = getSelected;
+			this.projection = projection.ToList();
 		}
 
 		public override void BindView (Android.Views.View view, Context context, ICursor cursor)
 		{
 			base.BindView (view, context, cursor);
-			var color = cursor.GetInt(projection.ToList().IndexOf(CalendarContract.Calendars.InterfaceConsts.CalendarColor));
+
+			var color = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.CalendarColor));
 			view.FindViewById<View>(Resource.Id.calColorSwatch).SetBackgroundColor(new Android.Graphics.Color(color));
+
+			var calId = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
+
+			view.SetBackgroundColor(context.Resources.GetColor((getSelectedIndexFunc() == calId) ? Android.Resource.Color.PrimaryTextDark : Android.Resource.Color.Transparent));
 		}
 	}
 }
