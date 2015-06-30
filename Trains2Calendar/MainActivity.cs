@@ -82,9 +82,9 @@ namespace Trains2Calendar
 		protected override void OnCreate (Bundle savedInstanceState)
 		{
 			base.OnCreate (savedInstanceState);
-			savedInstanceState.Get("");
+
 			// restore state
-			SelectedCalendarID = savedInstanceState.Get(() => SelectedCalendarID, -1);
+			SelectedCalendarID = savedInstanceState.GetValue(() => SelectedCalendarID);
 			if (SelectedCalendarID == -1) 
 				SelectedCalendarID = GetSavedCalendarID();
 			/*if (savedInstanceState != null && savedInstanceState.ContainsKey(nameof(SelectedCalendarID)))
@@ -149,7 +149,7 @@ namespace Trains2Calendar
 		{
 			base.OnSaveInstanceState (outState);
 			//outState.PutInt(nameof(SelectedCalendarID), SelectedCalendarID);
-			outState.Put(() => SelectedCalendarID);
+			outState.PutValue(() => SelectedCalendarID);
 		}
 
 		bool HasReceivedEvents {
