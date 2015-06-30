@@ -14,6 +14,16 @@ namespace Trains2Calendar
 	{
 		const string jSONSERIALIZED = "__JSONSERIALIZED__";
 
+		static List<IMapItem> typesMapping;
+
+		static BundleExtensions() {
+			typesMapping = new List<IMapItem>{
+				new TypeMap<bool>((Bundle b) => b.PutBoolean),
+				new TypeMap<int>((Bundle b) => b.PutInt),
+			};
+		}
+
+
 		public static T GetValue<T> (this Bundle bundle, string propName, T defaultValue = default(T))
 		{
 			if (bundle != null) {
@@ -115,7 +125,7 @@ namespace Trains2Calendar
 				bundle = new Bundle();
 
 			bool hasConverted = false;
-
+			/*
 			if (typeof(T) == typeof(Bundle)) //Fill(bundle, value, (Bundle b) => b.PutAll);
 				bundle.PutAll (DoConvert<Bundle> (value, out hasConverted));
 
@@ -124,9 +134,13 @@ namespace Trains2Calendar
 
 			else if (typeof(T) == typeof(int)) //Fill(bundle, value, (Bundle b) => b.PutInt);
 				bundle.PutInt (propName, DoConvert<int> (value, out hasConverted));
+			*/
+			foreach (var listItem in typesMapping) {
+				listItem.Invoke(bundle, value);
+			}
 
-			// TEST
-			//Fill (bundle, propName, false, b => b.PutBoolean );//, (Bundle b) => b.GetBoolean);
+
+			//
 
 			if (hasConverted == false) {
 				throw new NotSupportedException(string.Format("type {0} not supported for param {1}", typeof(T).Name, propName));
@@ -141,6 +155,34 @@ namespace Trains2Calendar
 			MemberExpression member = property.Body as MemberExpression;
 			bundle.PutValue(member.Member.Name, property.Compile()());
 			return bundle;
+		}
+
+
+		interface IMapItem {
+			void Invoke(Bundle b, object value);
+		}
+
+		class TypeMap<T> : IMapItem {
+
+			readonly Expression<Action<string, T>> Put;
+
+			public TypeMap (Expression<Action<string, T>> put)
+			{
+				this.Put = put;	
+			}
+
+			#region IMapItem implementation
+
+			public void Invoke (Bundle b, object value)
+			{
+				if (value is T) {
+					MemberExpression member = Put.Body as MemberExpression;
+					string name = member.Member.Name;
+					Put.Compile ().Invoke (name, (T)value);
+				}
+			}
+
+			#endregion
 		}
 
 
