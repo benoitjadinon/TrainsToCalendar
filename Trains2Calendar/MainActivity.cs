@@ -84,7 +84,7 @@ namespace Trains2Calendar
 			base.OnCreate (savedInstanceState);
 
 			// restore state
-			SelectedCalendarID = savedInstanceState.GetValue(() => SelectedCalendarID);
+			SelectedCalendarID = savedInstanceState.GetValue(() => SelectedCalendarID, -1);
 			if (SelectedCalendarID == -1) 
 				SelectedCalendarID = GetSavedCalendarID();
 			/*if (savedInstanceState != null && savedInstanceState.ContainsKey(nameof(SelectedCalendarID)))

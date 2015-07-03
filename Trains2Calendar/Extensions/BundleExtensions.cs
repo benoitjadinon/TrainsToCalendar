@@ -18,9 +18,53 @@ namespace Trains2Calendar
 
 		static BundleExtensions() {
 			typesMapping = new List<IMapItem>{
-				new TypeMap<bool>((Bundle b) => b.PutBoolean),
-				new TypeMap<int>((Bundle b) => b.PutInt),
+				new TypeMap<bool>  ((b, i, v) => b.PutBoolean(i, v), (b, i) => b.GetBoolean(i)),
+				new TypeMap<int>   ((b, i, v) => b.PutInt(i, v),     (b, i) => b.GetInt(i)),
+				new TypeMap<string>((b, i, v) => b.PutString(i, v),  (b, i) => b.GetString(i)),
 			};
+		}
+
+
+		interface IMapItem {
+			void Put(Bundle b, string name, object value, out bool success);
+			object Get(Bundle b, Type t, string name, out bool success);
+		}
+
+		class TypeMap<T> : IMapItem 
+		{
+			readonly Action<Bundle, string, T> PutExpr;
+			readonly Func<Bundle, string, T> GetExpr;
+
+			public TypeMap (Action<Bundle, string, T> put, Func<Bundle, string, T> get)
+			{
+				this.PutExpr = put;
+				this.GetExpr = get;
+			}
+
+			#region IMapItem implementation
+
+			public void Put (Bundle b, string name, object value, out bool success)
+			{
+				if (value is T) {
+					PutExpr (b, name, (T)value);
+					success = true;
+					return;
+				}
+				success = false;
+			}
+
+			public object Get (Bundle b, Type t, string name, out bool success)
+			{
+				if (t == typeof(T)){
+					var val = (T)GetExpr.Invoke(b, name);
+					success = true;
+					return val;
+				}
+				success = false;
+				return null;
+			}
+
+			#endregion
 		}
 
 
@@ -30,120 +74,48 @@ namespace Trains2Calendar
 				bool hasConverted = false;
 
 				if (bundle.ContainsKey (propName)) {
-					if (typeof(T) == typeof(bool))
-						return DoConvert<T> (bundle.GetBoolean (propName, DoConvert<bool> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(bool[]))
-						return DoConvert<T> (bundle.GetBooleanArray (propName), out hasConverted);
 
-					if (typeof(T) == typeof(Bundle))
-						return DoConvert<T> (bundle.GetBundle (propName), out hasConverted);
-
-					if (typeof(T) == typeof(sbyte))
-						return DoConvert<T> (bundle.GetByte (propName, DoConvert<sbyte> (defaultValue, out hasConverted)), out hasConverted);
-					//if (typeof(T) == typeof(Byte))
-					//	return DoConvert<T> (bundle.GetByte (propName, DoConvert<Java.Lang.Byte> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(byte[]))
-						return DoConvert<T> (bundle.GetByteArray (propName), out hasConverted);
-
-					if (typeof(T) == typeof(char))
-						return DoConvert<T> (bundle.GetChar (propName, DoConvert<char> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(char[]))
-						return DoConvert<T> (bundle.GetCharArray (propName), out hasConverted);
-
-					/*
-					if (typeof(T) == typeof(CharSequence)) 
-						return DoConvert<T> (bundle.GetChar (propName, DoConvert<char> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(char[])) 
-						return DoConvert<T> (bundle.GetCharArray (propName, DoConvert<char[]> (defaultValue, out hasConverted)), out hasConverted);
-						*/
-
-					if (typeof(T) == typeof(double))
-						return DoConvert<T> (bundle.GetDouble (propName, DoConvert<double> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(double[]))
-						return DoConvert<T> (bundle.GetDoubleArray (propName), out hasConverted);
-
-					if (typeof(T) == typeof(float))
-						return DoConvert<T> (bundle.GetFloat (propName, DoConvert<float> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(float[]))
-						return DoConvert<T> (bundle.GetFloatArray (propName), out hasConverted);
-
-					if (typeof(T) == typeof(int))
-						return DoConvert<T> (bundle.GetInt (propName, DoConvert<int> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(int[]))
-						return DoConvert<T> (bundle.GetIntArray (propName), out hasConverted);
-					if (typeof(T) == typeof(IList<int>))
-						return DoConvert<T> (bundle.GetIntegerArrayList (propName), out hasConverted);
-
-					if (typeof(T) == typeof(long))
-						return DoConvert<T> (bundle.GetLong (propName, DoConvert<long> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(long[]))
-						return DoConvert<T> (bundle.GetLongArray (propName), out hasConverted);
-
-					if (typeof(T) == typeof(IParcelable))
-						return DoConvert<T> (bundle.GetParcelable (propName), out hasConverted);
-					if (typeof(T) == typeof(IParcelable[]))
-						return DoConvert<T> (bundle.GetParcelableArray (propName), out hasConverted);
-
-					if (typeof(T) == typeof(ISerializable))
-						return DoConvert<T> (bundle.GetSerializable (propName), out hasConverted);
-
-					if (typeof(T) == typeof(short))
-						return DoConvert<T> (bundle.GetShort (propName, DoConvert<short> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(short[]))
-						return DoConvert<T> (bundle.GetShortArray (propName), out hasConverted);
-					
-					if (typeof(T) == typeof(string))
-						return DoConvert<T> (bundle.GetString (propName, DoConvert<string> (defaultValue, out hasConverted)), out hasConverted);
-					if (typeof(T) == typeof(string[]))
-						return DoConvert<T> (bundle.GetStringArray (propName), out hasConverted);
-					if (typeof(T) == typeof(IList<string>))
-						return DoConvert<T> (bundle.GetStringArrayList (propName), out hasConverted);
-					/*
-						if (typeof(T) == typeof(Integer[])) 
-							return DoConvert<T> (bundle.GetIntegerArrayList (propName, DoConvert<Integer[]> (defaultValue, out hasConverted)), out hasConverted);
-
-					*/
+					//TODO: return smth so we can break the loop ?
+					foreach (var listItem in typesMapping) {
+						var res = listItem.Get(bundle, typeof(T), propName, out hasConverted);
+						if (hasConverted)
+							return (T)res;
+					}
 
 				} else if (bundle.ContainsKey (jSONSERIALIZED + propName)) {
 					//return jsonconvert.from(bundle.GetString(jSONSERIALIZED+propName));
 				}
 			}
 
-			return default(T);
+			return defaultValue;
 		}
 
 		public static T GetValue<T> (this Bundle bundle, Expression<Func<T>> property, T defaultValue = default(T))
 		{
-			MemberExpression member = property.Body as MemberExpression;
-			return GetValue(bundle, member.Member.Name, defaultValue);
+			return GetValue(bundle, GetExpressionName<T>(property.Body), defaultValue);
 		}
 
-
-		public static Bundle PutValue<T> (this Bundle bundle, string propName, T value) 
+		public static void FillValue<T> (this Bundle bundle, Expression<Action<T>> property, T defaultValue = default(T))
 		{
-			if (bundle == null) 
-				bundle = new Bundle();
+			property.Compile().Invoke(GetValue(bundle, GetExpressionName<T>(property.Body), defaultValue));
+		}
+
+		public static Bundle PutValue<T> (this Bundle bundle, string propName, T value)
+		{
+			if (bundle == null)
+				bundle = new Bundle ();
 
 			bool hasConverted = false;
-			/*
-			if (typeof(T) == typeof(Bundle)) //Fill(bundle, value, (Bundle b) => b.PutAll);
-				bundle.PutAll (DoConvert<Bundle> (value, out hasConverted));
 
-			else if (typeof(T) == typeof(string)) //Fill(bundle, value, (Bundle b) => b.PutString);
-				bundle.PutString (propName, DoConvert<string> (value, out hasConverted));
-
-			else if (typeof(T) == typeof(int)) //Fill(bundle, value, (Bundle b) => b.PutInt);
-				bundle.PutInt (propName, DoConvert<int> (value, out hasConverted));
-			*/
 			foreach (var listItem in typesMapping) {
-				listItem.Invoke(bundle, value);
+				listItem.Put (bundle, propName, value, out hasConverted);
+				if (hasConverted) {
+					return bundle;
+				}
 			}
 
-
-			//
-
-			if (hasConverted == false) {
-				throw new NotSupportedException(string.Format("type {0} not supported for param {1}", typeof(T).Name, propName));
+			if (!hasConverted) {
+				throw new NotSupportedException (string.Format ("type {0} not supported for param {1}", typeof(T).Name, propName));
 				//bundle.PutString(jSONSERIALIZED + propName, Json.Convert(value));
 			}
 
@@ -152,49 +124,26 @@ namespace Trains2Calendar
 
 		public static Bundle PutValue<T> (this Bundle bundle, Expression<Func<T>> property)
 		{
-			MemberExpression member = property.Body as MemberExpression;
-			bundle.PutValue(member.Member.Name, property.Compile()());
+			bundle.PutValue(GetExpressionName<T>(property.Body), property.Compile()());
+			return bundle;
+		}
+
+		public static Bundle Fill<T> (Bundle bundle, string key, T value, Expression<Func<Bundle, Action<string, T>>> put)//, Expression<Func<string, T>> get = null)
+		{
+			put.Compile().Invoke(bundle).Invoke(key, value);
 			return bundle;
 		}
 
 
-		interface IMapItem {
-			void Invoke(Bundle b, object value);
-		}
 
-		class TypeMap<T> : IMapItem {
-
-			readonly Expression<Action<string, T>> Put;
-
-			public TypeMap (Expression<Action<string, T>> put)
-			{
-				this.Put = put;	
-			}
-
-			#region IMapItem implementation
-
-			public void Invoke (Bundle b, object value)
-			{
-				if (value is T) {
-					MemberExpression member = Put.Body as MemberExpression;
-					string name = member.Member.Name;
-					Put.Compile ().Invoke (name, (T)value);
-				}
-			}
-
-			#endregion
-		}
-
-
-		static void Fill<T> (Bundle bundle, string key, T value, Expression<Func<Bundle, Action<string, T>>> put)//, Expression<Func<string, T>> get = null)
+		static string GetExpressionName<T> (Expression exp)
 		{
-			put.Compile().Invoke(bundle).Invoke(key, value);
+			if (exp is MemberExpression)
+				return ((MemberExpression)exp).Member.Name;
+
+			// TODO: better handling
+			throw new InvalidCastException();
 		}
-		/*
-		static TB Fill<TB,T> (Func<T, TB> put, Action<T> get, T value)
-		{
-			put(value);
-		}*/
 
 
 		public static TConvertType DoConvert<TConvertType>(object convertValue, out bool hasConverted)
