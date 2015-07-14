@@ -46,7 +46,6 @@ namespace Trains2Calendar
 					events.Add (evt);
 				}
 
-				int step = -1;
 				Match stepMatch;
 				if (line.Contains (TokenType) && (stepMatch = Regex.Match (line, "([0-9]{1,3})(?=" + Regex.Escape (TokenType) + ")")).Success) {
 					evt.Step = Convert.ToUInt32(stepMatch.Value);

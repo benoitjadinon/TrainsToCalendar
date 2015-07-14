@@ -10,7 +10,6 @@ using Android.Widget;
 using Android.Database;
 using Android.Views;
 using Acr.Settings;
-using System.Collections;
 using BlueMarin;
 
 namespace Trains2Calendar
@@ -123,21 +122,18 @@ namespace Trains2Calendar
 
 			// calendars
 			//TODO calendarID = get from settings -> preselect calendar
-			var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
-			adapter = new CalendarsAdapter (this, cursor, calendarsProjection, () => SelectedCalendarID );
-
-			UpdateState ();
-
-			lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
-			lvCalendars.Adapter = adapter;
-			lvCalendars.ItemClick += (sender, e) => {
-				cursor.MoveToPosition (e.Position);
-				SelectedCalendarID = cursor.GetInt (calendarsProjection.ToList().IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
-
-				lvCalendars.Invalidate();
-
+			using (var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null)) {
+				adapter = new CalendarsAdapter (this, cursor, calendarsProjection, () => SelectedCalendarID);
 				UpdateState ();
-			};
+				lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
+				lvCalendars.Adapter = adapter;
+				lvCalendars.ItemClick += (sender, e) =>  {
+					cursor.MoveToPosition (e.Position);
+					SelectedCalendarID = cursor.GetInt (calendarsProjection.ToList ().IndexOf (CalendarContract.Calendars.InterfaceConsts.Id));
+					lvCalendars.Invalidate ();
+					UpdateState ();
+				};
+			}
 		}
 
 		protected override void OnSaveInstanceState (Bundle outState)
@@ -243,7 +239,7 @@ namespace Trains2Calendar
 			var color = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.CalendarColor));
 			view.FindViewById<View>(Resource.Id.calColorSwatch).SetBackgroundColor(new Android.Graphics.Color(color));
 
-			var calId = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
+			//var calId = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
 
 			//view.SetBackgroundColor(context.Resources.GetColor((getSelectedIndexFunc() == calId) ? Android.Resource.Color.PrimaryTextDark : Android.Resource.Color.Transparent));
 
