@@ -26,10 +26,15 @@ namespace Trains2Calendar.Tests
 		}
 
 		[Test]
-		public void TestString ()
+		public void TestGetString ()
 		{
 			bundle.PutValue(() => PropStringDef);
-			Assert.AreEqual (PropStringDef, bundle.GetString(() => PropStringDef));
+
+			//var valFromNative = bundle.GetString(nameof(PropStringDef));
+			var valFromNative = bundle.GetString("PropStringDef");
+
+			Assert.AreEqual (PropStringDef, valFromNative);
+			Assert.AreEqual (PropStringDef, bundle.GetValue(() => PropStringDef));
 		}
 
 		[Test]

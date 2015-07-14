@@ -15,6 +15,7 @@
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <AssemblyName>Trains2Calendar.Tests</AssemblyName>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -52,6 +53,7 @@
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
+    <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable-hdpi\Icon.png" />
@@ -62,10 +64,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\Trains2Calendar\Trains2Calendar.csproj">
-      <Project>{DFCC2AB4-2206-4811-A93F-687F6A027C70}</Project>
-      <Name>Trains2Calendar</Name>
-      <IsAppExtension>True</IsAppExtension>
+    <ProjectReference Include="..\BlueMarin.Android\BlueMarin.Android.csproj">
+      <Project>{4CB833C7-B9D9-44A7-8A26-63F36CD27F9A}</Project>
+      <Name>BlueMarin.Android</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

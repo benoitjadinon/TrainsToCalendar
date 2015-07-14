@@ -1,3 +1,6 @@
-[submodule "BlueMarine"]
-	path = BlueMarine
+[submodule "BlueMarin.Android"]
+	path = BlueMarin.Android
+	url = git@bitbucket.org:benoitjadinon/bluemarin.android.git
+[submodule "BlueMarin"]
+	path = BlueMarin
 	url = git@bitbucket.org:benoitjadinon/bluemarin.git
