@@ -37,7 +37,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SNCB2Calendar\Trains2Calendar.csproj">
+    <ProjectReference Include="..\Trains2Calendar\Trains2Calendar.csproj">
       <Project>{DFCC2AB4-2206-4811-A93F-687F6A027C70}</Project>
       <Name>Trains2Calendar</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>

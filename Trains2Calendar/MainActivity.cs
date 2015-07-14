@@ -10,6 +10,8 @@ using Android.Widget;
 using Android.Database;
 using Android.Views;
 using Acr.Settings;
+using System.Collections;
+using BlueMarin;
 
 namespace Trains2Calendar
 {
@@ -83,15 +85,8 @@ namespace Trains2Calendar
 		{
 			base.OnCreate (savedInstanceState);
 
-			// restore state
-			SelectedCalendarID = savedInstanceState.GetValue(() => SelectedCalendarID, -1);
-			if (SelectedCalendarID == -1) 
-				SelectedCalendarID = GetSavedCalendarID();
-			/*if (savedInstanceState != null && savedInstanceState.ContainsKey(nameof(SelectedCalendarID)))
-				SelectedCalendarID = savedInstanceState.GetInt(nameof(SelectedCalendarID));
-			else
-				SelectedCalendarID = GetSavedCalendarID();
-				*/
+			// restore state, from bundle if exists OTHERWISE from saved setting
+			SelectedCalendarID = savedInstanceState.GetValue(() => SelectedCalendarID, GetSavedCalendarID());
 
 			// get values from intent, if any
 
@@ -250,7 +245,8 @@ namespace Trains2Calendar
 
 			var calId = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
 
-			view.SetBackgroundColor(context.Resources.GetColor((getSelectedIndexFunc() == calId) ? Android.Resource.Color.PrimaryTextDark : Android.Resource.Color.Transparent));
+			//view.SetBackgroundColor(context.Resources.GetColor((getSelectedIndexFunc() == calId) ? Android.Resource.Color.PrimaryTextDark : Android.Resource.Color.Transparent));
+
 		}
 	}
 }

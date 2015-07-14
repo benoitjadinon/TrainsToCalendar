@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trains2Calendar", "Trains2C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trains2Calendar.UITests", "Trains2Calendar.UITests\Trains2Calendar.UITests.csproj", "{A4CC1496-7983-4A08-B79C-91E5116FB9B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trains2Calendar.Tests", "Trains2Calendar.Tests\Trains2Calendar.Tests.csproj", "{ABFA0B4F-45FE-45B2-B2B8-6BB69F051825}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A4CC1496-7983-4A08-B79C-91E5116FB9B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4CC1496-7983-4A08-B79C-91E5116FB9B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4CC1496-7983-4A08-B79C-91E5116FB9B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABFA0B4F-45FE-45B2-B2B8-6BB69F051825}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABFA0B4F-45FE-45B2-B2B8-6BB69F051825}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABFA0B4F-45FE-45B2-B2B8-6BB69F051825}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABFA0B4F-45FE-45B2-B2B8-6BB69F051825}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DFCC2AB4-2206-4811-A93F-687F6A027C70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DFCC2AB4-2206-4811-A93F-687F6A027C70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DFCC2AB4-2206-4811-A93F-687F6A027C70}.Release|Any CPU.ActiveCfg = Release|Any CPU

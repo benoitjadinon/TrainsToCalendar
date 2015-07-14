@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using Java.Lang;
 using Android.Runtime;
 using Android.Util;
+using Newtonsoft.Json;
 
 namespace BlueMarin
 {
@@ -106,7 +107,7 @@ namespace BlueMarin
 					}
 				}
 				if (bundle.ContainsKey (GetSerializedPropName(propName))) {
-					return Json.Deserialize<T>(bundle.GetString(GetSerializedPropName(propName)));
+					return JsonConvert.DeserializeObject<T>(bundle.GetString(GetSerializedPropName(propName)));
 				}
 			}
 
@@ -138,7 +139,7 @@ namespace BlueMarin
 			}
 
 			if (!hasConverted) {
-				bundle.PutString(GetSerializedPropName(propName), Json.Serialize(value));
+				bundle.PutString(GetSerializedPropName(propName), JsonConvert.SerializeObject(value));
 				throw new NotSupportedException (string.Format ("type {0} not supported for param {1}", typeof(T).Name, propName));
 			}
 

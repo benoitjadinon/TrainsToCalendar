@@ -1,0 +1,3 @@
+[submodule "BlueMarine"]
+	path = BlueMarine
+	url = git@bitbucket.org:benoitjadinon/bluemarin.git
