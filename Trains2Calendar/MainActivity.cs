@@ -11,6 +11,7 @@ using Android.Database;
 using Android.Views;
 using Acr.Settings;
 using BlueMarin;
+using BlueMarin.Android;
 
 namespace Trains2Calendar
 {
@@ -85,7 +86,7 @@ namespace Trains2Calendar
 			base.OnCreate (savedInstanceState);
 
 			// restore state, from bundle if exists OTHERWISE from saved setting
-			SelectedCalendarID = savedInstanceState.GetValue(() => SelectedCalendarID, GetSavedCalendarID());
+			SelectedCalendarID = savedInstanceState.GetValue (() => SelectedCalendarID, GetSavedCalendarID ());
 
 			// get values from intent, if any
 
@@ -123,16 +124,30 @@ namespace Trains2Calendar
 			// calendars
 			//TODO calendarID = get from settings -> preselect calendar
 			using (var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null)) {
-				adapter = new CalendarsAdapter (this, cursor, calendarsProjection, () => SelectedCalendarID);
-				UpdateState ();
-				lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
-				lvCalendars.Adapter = adapter;
-				lvCalendars.ItemClick += (sender, e) =>  {
-					cursor.MoveToPosition (e.Position);
-					SelectedCalendarID = cursor.GetInt (calendarsProjection.ToList ().IndexOf (CalendarContract.Calendars.InterfaceConsts.Id));
-					lvCalendars.Invalidate ();
+				if (cursor.Count > 0) {
+					adapter = new CalendarsAdapter (this, cursor, calendarsProjection, () => SelectedCalendarID);
 					UpdateState ();
-				};
+					lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
+					lvCalendars.Adapter = adapter;
+					lvCalendars.ItemClick += (sender, e) => {
+						cursor.MoveToPosition (e.Position);
+						SelectedCalendarID = cursor.GetInt (calendarsProjection.ToList ().IndexOf (CalendarContract.Calendars.InterfaceConsts.Id));
+						lvCalendars.Invalidate ();
+						UpdateState ();
+					};
+				} else {
+					new AlertDialog.Builder(this)
+						.SetTitle(Resource.String.error)
+						.SetMessage(Resource.String.error_no_calendars)
+						.SetNeutralButton(Android.Resource.String.Cancel, delegate{ 
+							Finish();
+						})
+						.SetPositiveButton(Android.Resource.String.Ok, delegate{ 
+							Finish();
+							StartActivity(new Intent(Android.Provider.Settings.ActionSettings));
+						})
+						.Show();
+				}
 			}
 		}
 
@@ -219,16 +234,17 @@ namespace Trains2Calendar
 	{
 		readonly List<String> projection;
 
-		readonly Func<int> getSelectedIndexFunc;
+		readonly Func<int> getSelectedIdFunc;
 
-		public CalendarsAdapter (Context context, ICursor c, string[] projection, Func<int> getSelected) : base(context, Resource.Layout.CalendarListItem, c, projection, new int[] {
+		public CalendarsAdapter (Context context, ICursor c, string[] projection, Func<int> getSelected) 
+			: base(context, Resource.Layout.CalendarListItem, c, projection, new int[] {
 					Resource.Id.calId, 
 					Resource.Id.calDisplayName, 
 					Resource.Id.calAccountName,
 					Resource.Id.calColor
 				})
 		{
-			this.getSelectedIndexFunc = getSelected;
+			this.getSelectedIdFunc = getSelected;
 			this.projection = projection.ToList();
 		}
 
@@ -236,13 +252,23 @@ namespace Trains2Calendar
 		{
 			base.BindView (view, context, cursor);
 
-			var color = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.CalendarColor));
-			view.FindViewById<View>(Resource.Id.calColorSwatch).SetBackgroundColor(new Android.Graphics.Color(color));
+			var color = cursor.GetInt (projection.IndexOf (CalendarContract.Calendars.InterfaceConsts.CalendarColor));
+			var calId = cursor.GetInt (projection.IndexOf (CalendarContract.Calendars.InterfaceConsts.Id));
 
-			//var calId = cursor.GetInt(projection.IndexOf(CalendarContract.Calendars.InterfaceConsts.Id));
+			var bal = view.SetTagChained(1, "string");
+			var viewHolder = (CalendarViewHolder)view.Tag ?? new CalendarViewHolder {
+				ColorSwatch = view.FindViewById<View>(Resource.Id.calColorSwatch),
+				RadioButton = view.FindViewById<RadioButton>(Resource.Id.checkBox),
+			};
 
+			viewHolder.ColorSwatch.SetBackgroundColor(new Android.Graphics.Color(color));
+			viewHolder.RadioButton.Checked = getSelectedIdFunc() == calId;
 			//view.SetBackgroundColor(context.Resources.GetColor((getSelectedIndexFunc() == calId) ? Android.Resource.Color.PrimaryTextDark : Android.Resource.Color.Transparent));
+		}
 
+		internal class CalendarViewHolder : Java.Lang.Object {
+			internal View ColorSwatch {get;set;}
+			public RadioButton RadioButton {get;set;}
 		}
 	}
 }

@@ -15,4 +15,6 @@
 	<string name="token_platform">"Platf. "</string>
 	<string name="token_walk">"walk "</string>
 
+	<string name="error">"Error"</string>
+	<string name="error_no_calendars">No calendars are available on this device. Please first set up your accounts.</string>
 </resources>
