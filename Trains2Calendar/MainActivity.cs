@@ -80,6 +80,7 @@ namespace Trains2Calendar
 			settings = Acr.Settings.Settings.Local;
 		}
 
+		ICursor cursor;
 
 		protected override void OnCreate (Bundle savedInstanceState)
 		{
@@ -123,31 +124,32 @@ namespace Trains2Calendar
 
 			// calendars
 			//TODO calendarID = get from settings -> preselect calendar
-			using (var cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null)) {
-				if (cursor.Count > 0) {
-					adapter = new CalendarsAdapter (this, cursor, calendarsProjection, () => SelectedCalendarID);
+			cursor = ManagedQuery (CalendarContract.Calendars.ContentUri, calendarsProjection, null, null, null);
+			if (cursor.Count > 0) {
+				adapter = new CalendarsAdapter (this, cursor, calendarsProjection, () => SelectedCalendarID);
+				UpdateState ();
+				lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
+				lvCalendars.Adapter = adapter;
+				lvCalendars.ItemClick += (sender, e) => {
+					var item = adapter.GetItem(e.Position);
+					cursor.MoveToPosition(e.Position);
+					SelectedCalendarID = cursor.GetInt (calendarsProjection.ToList ().IndexOf (CalendarContract.Calendars.InterfaceConsts.Id));
+					lvCalendars.Invalidate ();
+					adapter.NotifyDataSetChanged();
 					UpdateState ();
-					lvCalendars = FindViewById<ListView> (Resource.Id.lvCalendars);
-					lvCalendars.Adapter = adapter;
-					lvCalendars.ItemClick += (sender, e) => {
-						cursor.MoveToPosition (e.Position);
-						SelectedCalendarID = cursor.GetInt (calendarsProjection.ToList ().IndexOf (CalendarContract.Calendars.InterfaceConsts.Id));
-						lvCalendars.Invalidate ();
-						UpdateState ();
-					};
-				} else {
-					new AlertDialog.Builder(this)
-						.SetTitle(Resource.String.error)
-						.SetMessage(Resource.String.error_no_calendars)
-						.SetNeutralButton(Android.Resource.String.Cancel, delegate{ 
-							Finish();
-						})
-						.SetPositiveButton(Android.Resource.String.Ok, delegate{ 
-							Finish();
-							StartActivity(new Intent(Android.Provider.Settings.ActionSettings));
-						})
-						.Show();
-				}
+				};
+			} else {
+				new AlertDialog.Builder(this)
+					.SetTitle(Resource.String.error)
+					.SetMessage(Resource.String.error_no_calendars)
+					.SetNeutralButton(Android.Resource.String.Cancel, delegate{ 
+						Finish();
+					})
+					.SetPositiveButton(Android.Resource.String.Ok, delegate{ 
+						Finish();
+						StartActivity(new Intent(Android.Provider.Settings.ActionSettings));
+					})
+					.Show();
 			}
 		}
 
@@ -255,7 +257,6 @@ namespace Trains2Calendar
 			var color = cursor.GetInt (projection.IndexOf (CalendarContract.Calendars.InterfaceConsts.CalendarColor));
 			var calId = cursor.GetInt (projection.IndexOf (CalendarContract.Calendars.InterfaceConsts.Id));
 
-			var bal = view.SetTagChained(1, "string");
 			var viewHolder = (CalendarViewHolder)view.Tag ?? new CalendarViewHolder {
 				ColorSwatch = view.FindViewById<View>(Resource.Id.calColorSwatch),
 				RadioButton = view.FindViewById<RadioButton>(Resource.Id.checkBox),
